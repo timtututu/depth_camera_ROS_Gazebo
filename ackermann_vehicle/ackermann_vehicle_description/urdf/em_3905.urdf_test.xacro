@@ -1,41 +1,5 @@
 <?xml version="1.0"?>
 
-<!-- em_3905.urdf.xacro
-
-This file defines a model of a Traxxas(R) E-Maxx(R) #3905 RC (Radio Controlled)
-truck.
-
-Lengths are measured in meters, angles are measured in radians, and masses are
-measured in kilograms. All of these values are approximations.
-
-To work with Gazebo, each link must have an inertial element, even if
-the link only serves to connect two joints. To be visible in Gazebo, a link
-must have a collision element. Furthermore, the link must have a Gazebo
-material.
-
-Traxxas(R), E-Maxx(R), and Titan(R) are registered trademarks of Traxxas
-Management, LLC. em_3905.urdf.xacro was independently created by Wunderkammer
-Laboratory, and neither em_3905.urdf.xacro nor Wunderkammer Laboratory is
-affiliated with, sponsored by, approved by, or endorsed by Traxxas Management,
-LLC. Mabuchi Motor(R) is a registered trademark of Mabuchi Motor Co., Ltd.
-Corporation Japan. All other trademarks and service marks are the property of
-their respective owners.
-
-Copyright (c) 2011-2014 Wunderkammer Laboratory
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <robot name="em_3905" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Degree-to-radian conversions -->
   <xacro:property name="degrees_45" value="0.785398163"/>
@@ -364,9 +328,9 @@ limitations under the License.
   </gazebo>
 
   <!-- camera -->
-  <link name="camera">
+  <link name="camera_depth_frame">
     <visual>
-      <origin xyz="${chassis_length / 1.5} 0 ${-chassis_height / 2}"/>
+      <origin xyz="0 0 0"/>
       <geometry>
         <box size="${chassis_length / 5} ${chassis_width / 5} ${chassis_height*5}"/>
       </geometry>
@@ -380,23 +344,26 @@ limitations under the License.
     </collision>
   </link>
 
-  <gazebo reference="camera">
+  <gazebo reference="camera_depth_frame">
     <material>Gazebo/Red</material>
   </gazebo>
 
   <joint name="chassis_link_to_cam" type="fixed">
     <parent link="chassis"/>
-    <child link="camera"/>
+    <child link="camera_depth_frame"/>
+    <origin xyz="${chassis_length / 1.5} 0 ${-chassis_height / 2}"/>
   </joint>
 
   <!-- camera frame -->
   <joint name="camera_optical_joint" type="fixed">
-    <parent link="camera"/>
+    <parent link="camera_depth_frame"/>
     <child link="camera_depth_optical_frame"/>
     <origin xyz="0.1516 0 0.012" rpy="${-pi/2} 0 ${-pi/2}"/>
   </joint>
 
-  <link name="camera_depth_optical_frame"></link>
+  <link name="camera_depth_optical_frame">
+    <origin xyz="0 0 0"/>
+  </link>
 
   <!-- Chassis -->
   <link name="chassis">
@@ -448,7 +415,7 @@ limitations under the License.
     <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so"/>
   </gazebo>
 
-  <gazebo reference="camera">  
+  <gazebo reference="camera_depth_frame">  
       <sensor type="depth" name="camera">
         <always_on>true</always_on>
         <update_rate>20.0</update_rate>
@@ -460,8 +427,8 @@ limitations under the License.
             <height>480</height>
           </image>
           <clip>
-            <near>0.05</near>
-            <far>12.0</far>
+            <near>0.0001</near>
+            <far>13.0</far>
           </clip>
         </camera>
         <plugin name="kinect_camera_controller" filename="/home/timtu/catkin_ws/src/ackermann_vehicle/ackermann_vehicle_gazebo/plugin/libgazebo_ros_openni_kinect.so">
@@ -499,50 +466,51 @@ limitations under the License.
       <jointName>right_steering_joint</jointName>
     </plugin>
   </gazebo>
+  
+  <!-- <gazebo>
+    <plugin name="gazebo_ros_ackermann_drive" filename="libgazebo_ros_ackermann_drive.so">
+
+    <ros>
+      <namespace>demo</namespace>
+      <remapping>cmd_vel:=cmd_demo</remapping>
+      <remapping>odom:=odom_demo</remapping>
+      <remapping>distance:=distance_demo</remapping>
+    </ros>
+
+    <update_rate>100.0</update_rate>
+
+    <front_left_joint>front_left_wheel_joint</front_left_joint>
+    <front_right_joint>front_right_wheel_joint</front_right_joint>
+    <rear_left_joint>rear_left_wheel_joint</rear_left_joint>
+    <rear_right_joint>rear_right_wheel_joint</rear_right_joint>
+    <left_steering_joint>front_left_steer_joint</left_steering_joint>
+    <right_steering_joint>front_right_steer_joint</right_steering_joint>
+    <steering_wheel_joint>steering_joint</steering_wheel_joint>
+
+    <max_steer>0.6458</max_steer>
+
+
+    <max_steering_angle>7.85</max_steering_angle>
+
+    <max_speed>20</max_speed>
+
+    <left_steering_pid_gain>1500 0 1</left_steering_pid_gain>
+    <left_steering_i_range>0 0</left_steering_i_range>
+    <right_steering_pid_gain>1500 0 1</right_steering_pid_gain>
+    <right_steering_i_range>0 0</right_steering_i_range>
+    <linear_velocity_pid_gain>1000 0 1</linear_velocity_pid_gain>
+    <linear_velocity_i_range>0 0</linear_velocity_i_range>
+
+    <publish_odom>true</publish_odom>
+    <publish_odom_tf>true</publish_odom_tf>
+    <publish_wheel_tf>true</publish_wheel_tf>
+    <publish_distance>true</publish_distance>
+
+    <odometry_frame>odom_demo</odometry_frame>
+    <robot_base_frame>chassis</robot_base_frame>
+    </plugin>
+  </gazebo> -->
 </robot>
 
-  <!-- <gazebo reference="camera">
-    <sensor type="depth" name="front_realsense_depth">
-      <update_rate>30</update_rate>
-      <camera>
-        <horizontal_fov>1.5184351666666667</horizontal_fov>
-        <vertical_fov>1.0122901111111111</vertical_fov>
-
-        <image>
-          <width>640</width>
-          <height>480</height>
-          <format>RGB8</format>
-        </image>
-        <clip>
-          <near>0.01</near>
-          <far>50.0</far>
-        </clip>
-      </camera>
-      <plugin name="kinect_controller" filename="/home/timtu/catkin_ws/src/ackermann_vehicle/ackermann_vehicle_gazebo/plugin/libgazebo_ros_openni_kinect.so">
-        <baseline>0.2</baseline>
-        <alwaysOn>true</alwaysOn>
-        <updateRate>30</updateRate>
-        <cameraName>realsense</cameraName>
-        <imageTopicName>color/image_raw</imageTopicName>
-        <cameraInfoTopicName>color/camera_info</cameraInfoTopicName>
-        <depthImageTopicName>depth/image_rect_raw</depthImageTopicName>
-        <depthImageInfoTopicName>depth/camera_info</depthImageInfoTopicName>
-        <pointCloudTopicName>depth/color/points</pointCloudTopicName>
-        <frameName>front_realsense_gazebo</frameName>
-        <pointCloudCutoff>0.105</pointCloudCutoff>
-        <pointCloudCutoffMax>8.0</pointCloudCutoffMax>
-        <distortionK1>0.00000001</distortionK1>
-        <distortionK2>0.00000001</distortionK2>
-        <distortionK3>0.00000001</distortionK3>
-        <distortionT1>0.00000001</distortionT1>
-        <distortionT2>0.00000001</distortionT2>
-        <CxPrime>0</CxPrime>
-        <Cx>0</Cx>
-        <Cy>0</Cy>
-        <focalLength>0</focalLength>
-        <hackBaseline>0</hackBaseline>
-      </plugin>
-    </sensor>
-  </gazebo> -->
 
 
